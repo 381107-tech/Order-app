@@ -159,7 +159,76 @@
     // 顯示訊息通知
     function showMessage(msg, isError = false) {
       const box = document.getElementById('message-box');
-      box.className = `mb-4 p-3 rounded-xl text-sm font-medium transition-all ${ isError ? 'bg-rose-100 text-rose-700 border border-rose-200' : 'bg-emerald-100 text-emerald-700 border border-emerald-200' }`; box.textContent = msg; box.classList.remove('hidden'); }  // 隱藏訊息通知 function hideMessage() { document.getElementById('message-box').classList.add('hidden'); }  // 處理表單提交（新增/更新訂單） function handleOrderSubmit(e) { e.preventDefault(); hideMessage();  const seatInput = document.getElementById('seat-number').value.trim(); const itemInput = document.getElementById('item-code').value.trim();  const seatNum = parseInt(seatInput, 10);  // 檢查座號 0：代表結束登記 if (seatNum === 0) { finishOrdering(); return; }  // 3. 輸入驗證：座號 1~50 if (isNaN(seatNum) \vert{}\vert{} seatNum < 1 \vert{}\vert{} seatNum > 50) { showMessage('【輸入錯誤】座號必須介於 1 到 50 之間！(或輸入 0 結束)', true); document.getElementById('seat-number').focus(); return; }  const itemId = parseInt(itemInput, 10); const menuItem = MENU.find(m => m.id === itemId);  // 3. 輸入驗證：餐點編號須在菜單範圍內 (1~5) if (isNaN(itemId) \vert{}\vert{} !menuItem) { showMessage('【輸入錯誤】餐點編號無效，請輸入 1 ~ 5 之間的餐點編號！', true); document.getElementById('item-code').focus(); return; }  // 成功登記訂單 orders[seatNum] = itemId; showMessage(`✅ 已成功為 [ ${seatNum} 號 ] 登記餐點：${menuItem.name} ($${menuItem.price})`);  // 清空輸入並重置對焦 document.getElementById('seat-number').value = ''; document.getElementById('item-code').value = ''; document.getElementById('seat-number').focus();  // 更新報表 updateReport(); }  // 完成登記（座號 0） function finishOrdering() { document.getElementById('seat-number').value = ''; document.getElementById('item-code').value = ''; showMessage('🎉 已完成訂餐登記！結算報表已更新於上方。', false); updateReport(); }  // 刪除單筆訂單 function deleteOrder(seat) { delete orders[seat]; showMessage(`已移除 ${seat} 號的訂單。`);
+      box.className = `mb-4 p-3 rounded-xl text-sm font-medium transition-all ${
+        isError ? 'bg-rose-100 text-rose-700 border border-rose-200' : 'bg-emerald-100 text-emerald-700 border border-emerald-200'
+      }`;
+      box.textContent = msg;
+      box.classList.remove('hidden');
+    }
+
+    // 隱藏訊息通知
+    function hideMessage() {
+      document.getElementById('message-box').classList.add('hidden');
+    }
+
+    // 處理表單提交（新增/更新訂單）
+    function handleOrderSubmit(e) {
+      e.preventDefault();
+      hideMessage();
+
+      const seatInput = document.getElementById('seat-number').value.trim();
+      const itemInput = document.getElementById('item-code').value.trim();
+
+      const seatNum = parseInt(seatInput, 10);
+
+      // 檢查座號 0：代表結束登記
+      if (seatNum === 0) {
+        finishOrdering();
+        return;
+      }
+
+      // 3. 輸入驗證：座號 1~50
+      if (isNaN(seatNum) || seatNum < 1 || seatNum > 50) {
+        showMessage('【輸入錯誤】座號必須介於 1 到 50 之間！(或輸入 0 結束)', true);
+        document.getElementById('seat-number').focus();
+        return;
+      }
+
+      const itemId = parseInt(itemInput, 10);
+      const menuItem = MENU.find(m => m.id === itemId);
+
+      // 3. 輸入驗證：餐點編號須在菜單範圍內 (1~5)
+      if (isNaN(itemId) || !menuItem) {
+        showMessage('【輸入錯誤】餐點編號無效，請輸入 1 ~ 5 之間的餐點編號！', true);
+        document.getElementById('item-code').focus();
+        return;
+      }
+
+      // 成功登記訂單
+      orders[seatNum] = itemId;
+      showMessage(`✅ 已成功為 [ ${seatNum} 號 ] 登記餐點：${menuItem.name} ($${menuItem.price})`);
+
+      // 清空輸入並重置對焦
+      document.getElementById('seat-number').value = '';
+      document.getElementById('item-code').value = '';
+      document.getElementById('seat-number').focus();
+
+      // 更新報表
+      updateReport();
+    }
+
+    // 完成登記（座號 0）
+    function finishOrdering() {
+      document.getElementById('seat-number').value = '';
+      document.getElementById('item-code').value = '';
+      showMessage('🎉 已完成訂餐登記！結算報表已更新於上方。', false);
+      updateReport();
+    }
+
+    // 刪除單筆訂單
+    function deleteOrder(seat) {
+      delete orders[seat];
+      showMessage(`已移除 ${seat} 號的訂單。`);
       updateReport();
     }
 
@@ -205,7 +274,8 @@
       }).join('');
 
       // 更新全班總金額與總筆數
-      grandTotalEl.textContent = `NT$ ${grandTotal}`; totalCountBadge.textContent = `總訂餐筆數：${totalCount} 筆`;
+      grandTotalEl.textContent = `NT$ ${grandTotal}`;
+      totalCountBadge.textContent = `總訂餐筆數：${totalCount} 筆`;
 
       // 渲染所有已訂餐座號明細清單
       const seats = Object.keys(orders).map(Number).sort((a, b) => a - b);
@@ -216,5 +286,19 @@
           const itemId = orders[seat];
           const item = MENU.find(m => m.id === itemId);
           return `
-            <div class="flex items-center justify-between p-2 bg-white rounded-lg border border-slate-200 shadow
-            
+            <div class="flex items-center justify-between p-2 bg-white rounded-lg border border-slate-200 shadow-sm">
+              <div>
+                <span class="font-bold text-slate-700">${seat}號</span>
+                <span class="text-slate-500 ml-1">${item ? item.name : ''}</span>
+              </div>
+              <button onclick="deleteOrder(${seat})" class="text-rose-400 hover:text-rose-600 p-1" title="刪除">
+                <i class="fa-solid fa-xmark"></i>
+              </button>
+            </div>
+          `;
+        }).join('');
+      }
+    }
+  </script>
+</body>
+</html>
